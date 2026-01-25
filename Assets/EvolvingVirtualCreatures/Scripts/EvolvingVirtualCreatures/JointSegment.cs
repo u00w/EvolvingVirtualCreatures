@@ -60,7 +60,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 		}
 
 		public void Init (JointSegment parent) {
-			Body.velocity *= 0f;
+			Body.linearVelocity *= 0f;
 			Body.angularVelocity *= 0f;
 			Body.mass = transform.localScale.magnitude;
 			// transform.position = parent.transform.position + Helper.directions[side] * 1.25f;
