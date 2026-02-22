@@ -221,17 +221,56 @@ namespace mattatz.EvolvingVirtualCreatures {
 		//	return fitness;
 		//}
 
-		//simple check
-		public override float ComputeFitness(){
+		//simple check WORKS
+		//public override float ComputeFitness(){
 
-			// Base: distance from where this creature started
-			float dist = (body.transform.position - origin).magnitude;
+		//	// Base: distance from where this creature started
+		//	float dist = (body.transform.position - origin).magnitude;
 
-			// Small baseline so early generations aren't all exactly 0
-			fitness = 0.001f + dist;
+		//	// Small baseline so early generations aren't all exactly 0
+		//	fitness = 0.001f + dist;
 
-			// Keep it sane
+		//	// Keep it sane
+		//	if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
+
+		//	return fitness;
+		//}
+
+		// Fix Gradual
+		public override float ComputeFitness()
+		{
+
+			// Always keep a tiny baseline so sum-fitness never becomes 0
+			const float baseline = 0.001f;
+
+			// Reward: forward progress from origin (better than magnitude because it discourages sideways rolling)
+			Vector3 delta = body.transform.position - origin;
+			float forwardProgress = Vector3.Dot(delta, forward.normalized);   // can be negative
+			float forwardReward = Mathf.Max(0f, forwardProgress);             // only reward forward
+
+			// Penalty: tipped over
+			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up); // 1 upright, 0 sideways, -1 upside down
+			const float uprightDot = 0.7f;
+			const float tipPenaltyScale = 0.5f; // start small; increase later
+			float tipPenalty = 0f;
+			if (upDot < uprightDot)
+			{
+				float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
+				tipPenalty = t * tipPenaltyScale;
+			}
+
+			// Penalty: fell below ground threshold
+			const float minY = -0.25f;
+			const float fallPenalty = 2f; // start small; increase later
+			float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+
+			fitness = baseline + forwardReward - tipPenalty - fallenPenalty;
+
+			// Keep it valid
 			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
+
+			// Avoid all-zero again
+			fitness = Mathf.Max(baseline, fitness);
 
 			return fitness;
 		}
