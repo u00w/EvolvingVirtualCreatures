@@ -184,6 +184,20 @@ namespace mattatz.EvolvingVirtualCreatures
 
 			body.transform.position = position;
 
+			// Explicitly set the Rigidbody's position as well.
+			// In Unity 2020+ Physics.autoSyncTransforms defaults to false, so
+			// transform.position alone does not update the physics body that was
+			// registered at the origin when AddComponent<Rigidbody>() was called.
+			// Without this, the first physics-to-transform sync would snap every
+			// creature back to (0,0,0), causing them all to pile up.
+			var rb = body.GetComponent<Rigidbody>();
+			if (rb != null)
+			{
+				rb.position = position;
+				rb.velocity = Vector3.zero;
+				rb.angularVelocity = Vector3.zero;
+			}
+
 			SampleCreature creature;
 			if (dna == null)
 			{
