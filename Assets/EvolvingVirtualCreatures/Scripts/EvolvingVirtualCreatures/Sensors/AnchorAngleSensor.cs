@@ -16,6 +16,16 @@ namespace mattatz.EvolvingVirtualCreatures {
 		}
 
 		public override float[] Output () {
+
+			//new
+			// Segment may have been Destroy()'d during reproduction.
+			// Avoid MissingReferenceException by returning neutral values.
+			if (segment == null) return new float[] { 0f, 0f, 0f };
+
+			// Anchor can also be destroyed / not yet created
+			if (!segment.Root && segment.Anchor == null) return new float[] { 0f, 0f, 0f };
+			//new
+
 			Vector3 angles;
 			if(segment.Root) {
 				angles = segment.transform.localRotation.eulerAngles / 360f;

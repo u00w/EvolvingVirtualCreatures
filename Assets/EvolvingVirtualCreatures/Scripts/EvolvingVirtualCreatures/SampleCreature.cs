@@ -52,6 +52,11 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 			origin = body.transform.position;
 			forward = body.transform.forward;
+
+			//new
+			// Recompute target every time the creature is (re)setup
+			target = origin + forward * distance;
+			//new
 		}
 
 		public override Creature Generate(DNA dna) {
@@ -237,6 +242,10 @@ namespace mattatz.EvolvingVirtualCreatures {
 		}
 
 		public override void DrawGizmos () {
+			// body is a UnityEngine.Object; after Destroy(), it becomes "fake null".
+			// Accessing body.transform then throws MissingReferenceException.
+			if (body == null) return;
+
 			Gizmos.color = Color.red;
 			Gizmos.DrawLine(body.transform.position, target);
 			Gizmos.DrawWireSphere(target, 1f);
