@@ -82,35 +82,87 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 		}
 
-		public override float ComputeFitness () {
-			/*
-			var d = distance / (body.transform.position - target).magnitude;
-			if(d <= 1f) {
-				fitness = 0f;
-			} else {
-				fitness = Mathf.Pow (d, 2f);
+		//public override float ComputeFitness () {
+
+		//	var d = distance / (body.transform.position - target).magnitude;
+		//	if(d <= 1f) {
+		//		fitness = 0f;
+		//	} else {
+		//		fitness = Mathf.Pow (d, 2f);
+		//	}
+
+
+		//	//float magnitude = 1f;
+
+		//	//fitness = (body.transform.position - origin, forward).magnitude;
+
+		//	//Extra from here
+
+		//	// ----- Upright penalty -----
+		//	// 1 when perfectly upright, 0 when sideways, -1 when upside down.
+		//	float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
+
+		//	// If you want to ignore small leans, allow a tolerance:
+		//	const float uprightDot = 0.7f; // ~45 degrees from upright
+		//	const float tipPenaltyScale = 5f;
+
+		//	float tipPenalty = 0f;
+		//	if (upDot < uprightDot)
+		//	{
+		//		// Normalize to 0..1 where 0 = at threshold, 1 = fully upside down/sideways depending on upDot
+		//		float t = Mathf.InverseLerp(uprightDot, -1f, upDot); // upDot: uprightDot -> -1
+		//		tipPenalty = t * tipPenaltyScale;
+		//	}
+
+		//	// ----- Falling penalty -----
+		//	const float minY = -0.25f;   // set based on your ground height
+		//	const float fallPenalty = 50f;
+
+		//	float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+
+		//	// Combine
+		//	fitness = distReward - tipPenalty - fallenPenalty;
+
+		//	// Keep fitness non-negative (optional, but often helpful for selection logic)
+		//	fitness = Mathf.Max(0f, fitness);
+
+		//	// Extra above
+
+		//	return fitness;
+		//}
+
+		public override float ComputeFitness()
+		{
+
+			// ---- Base reward: get closer to the target ----
+			float toTarget = (body.transform.position - target).magnitude;
+			toTarget = Mathf.Max(0.001f, toTarget); // avoid divide-by-zero
+
+			float d = distance / toTarget;
+
+			float distReward;
+			if (d <= 1f)
+			{
+				distReward = 0f;
 			}
-			*/
-
-			float magnitude = 1f;
-
-			fitness = (body.transform.position - origin, forward).magnitude;
-
-			//Extra from here
+			else
+			{
+				distReward = Mathf.Pow(d, 2f);
+			}
 
 			// ----- Upright penalty -----
 			// 1 when perfectly upright, 0 when sideways, -1 when upside down.
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
 
-			// If you want to ignore small leans, allow a tolerance:
+			// Ignore small leans
 			const float uprightDot = 0.7f; // ~45 degrees from upright
 			const float tipPenaltyScale = 5f;
 
 			float tipPenalty = 0f;
 			if (upDot < uprightDot)
 			{
-				// Normalize to 0..1 where 0 = at threshold, 1 = fully upside down/sideways depending on upDot
-				float t = Mathf.InverseLerp(uprightDot, -1f, upDot); // upDot: uprightDot -> -1
+				// 0 at threshold, 1 at fully upside down (upDot = -1)
+				float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
 				tipPenalty = t * tipPenaltyScale;
 			}
 
@@ -123,10 +175,8 @@ namespace mattatz.EvolvingVirtualCreatures {
 			// Combine
 			fitness = distReward - tipPenalty - fallenPenalty;
 
-			// Keep fitness non-negative (optional, but often helpful for selection logic)
+			// Keep fitness non-negative (optional)
 			fitness = Mathf.Max(0f, fitness);
-
-			// Extra above
 
 			return fitness;
 		}
