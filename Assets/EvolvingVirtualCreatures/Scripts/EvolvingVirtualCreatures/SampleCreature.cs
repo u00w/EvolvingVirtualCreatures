@@ -237,39 +237,86 @@ namespace mattatz.EvolvingVirtualCreatures {
 		//}
 
 		// Fix Gradual
+		//public override float ComputeFitness()
+		//{
+
+		//	// Always keep a tiny baseline so sum-fitness never becomes 0
+		//	const float baseline = 0.001f;
+		//	//new alive bonus
+		//	const float aliveBonus = 0.05f;
+		//	fitness = baseline + aliveBonus;
+
+		//	// Reward: forward progress from origin (better than magnitude because it discourages sideways rolling)
+		//	Vector3 delta = body.transform.position - origin;
+		//	float forwardProgress = Vector3.Dot(delta, forward.normalized);   // can be negative
+		//	float forwardReward = Mathf.Max(0f, forwardProgress);             // only reward forward
+
+		//	// Penalty: tipped over
+		//	float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up); // 1 upright, 0 sideways, -1 upside down
+		//	const float uprightDot = 0.7f;
+		//	const float tipPenaltyScale = 0.5f; // start small; increase later
+		//	float tipPenalty = 0f;
+		//	if (upDot < uprightDot)
+		//	{
+		//		float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
+		//		tipPenalty = t * tipPenaltyScale;
+		//	}
+
+		//	// Penalty: fell below ground threshold
+		//	const float minY = -0.25f;
+		//	const float fallPenalty = 2f; // start small; increase later
+		//	float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+
+		//	fitness = baseline + forwardReward - tipPenalty - fallenPenalty;
+
+		//	// Keep it valid
+		//	if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
+
+		//	// Avoid all-zero again
+		//	fitness = Mathf.Max(baseline, fitness);
+
+		//	return fitness;
+		//}
+
 		public override float ComputeFitness()
 		{
-
-			// Always keep a tiny baseline so sum-fitness never becomes 0
+			// Baseline so GA never gets "all zero" fitness
 			const float baseline = 0.001f;
 
-			// Reward: forward progress from origin (better than magnitude because it discourages sideways rolling)
-			Vector3 delta = body.transform.position - origin;
-			float forwardProgress = Vector3.Dot(delta, forward.normalized);   // can be negative
-			float forwardReward = Mathf.Max(0f, forwardProgress);             // only reward forward
+			// Small constant to keep early generations selectable even if they don't move yet
+			const float aliveBonus = 0.05f;
 
-			// Penalty: tipped over
+			fitness = baseline + aliveBonus;
+
+			// Reward: forward progress from origin
+			Vector3 delta = body.transform.position - origin;
+			float forwardProgress = Vector3.Dot(delta, forward.normalized); // can be negative
+			float forwardReward = Mathf.Max(0f, forwardProgress);           // only reward forward
+			fitness += forwardReward;
+
+			// Reward: being upright (broad, safe shaping reward)
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up); // 1 upright, 0 sideways, -1 upside down
+			float upright01 = Mathf.InverseLerp(-1f, 1f, upDot);                 // 0..1
+			const float uprightRewardScale = 0.2f;
+			fitness += upright01 * uprightRewardScale;
+
+			// Penalty: tipped over past tolerance
 			const float uprightDot = 0.7f;
 			const float tipPenaltyScale = 0.5f; // start small; increase later
-			float tipPenalty = 0f;
 			if (upDot < uprightDot)
 			{
-				float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
-				tipPenalty = t * tipPenaltyScale;
+				float t = Mathf.InverseLerp(uprightDot, -1f, upDot); // 0..1
+				float tipPenalty = t * tipPenaltyScale;
+				fitness -= tipPenalty;
 			}
 
 			// Penalty: fell below ground threshold
 			const float minY = -0.25f;
 			const float fallPenalty = 2f; // start small; increase later
-			float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+			if (body.transform.position.y < minY) fitness -= fallPenalty;
 
-			fitness = baseline + forwardReward - tipPenalty - fallenPenalty;
-
-			// Keep it valid
-			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
-
-			// Avoid all-zero again
+			// Final safety: keep finite and non-negative
+			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = baseline;
 			fitness = Mathf.Max(baseline, fitness);
 
 			return fitness;
