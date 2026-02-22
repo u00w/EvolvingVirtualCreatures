@@ -87,6 +87,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 		}
 
+		//OG
 		//public override float ComputeFitness () {
 
 		//	var d = distance / (body.transform.position - target).magnitude;
@@ -136,53 +137,86 @@ namespace mattatz.EvolvingVirtualCreatures {
 		//	return fitness;
 		//}
 
+
+		//01
+		//public override float ComputeFitness()
+		//{
+
+		//	// ---- Base reward: get closer to the target ----
+		//	float toTarget = (body.transform.position - target).magnitude;
+		//	toTarget = Mathf.Max(0.001f, toTarget); // avoid divide-by-zero
+
+		//	float d = distance / toTarget;
+
+		//	float distReward;
+		//	if (d <= 1f)
+		//	{
+		//		distReward = 0f;
+		//	}
+		//	else
+		//	{
+		//		distReward = Mathf.Pow(d, 2f);
+		//	}
+
+		//	// ----- Upright penalty -----
+		//	// 1 when perfectly upright, 0 when sideways, -1 when upside down.
+		//	float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
+
+		//	// Ignore small leans
+		//	const float uprightDot = 0.7f; // ~45 degrees from upright
+		//	const float tipPenaltyScale = 5f;
+
+		//	float tipPenalty = 0f;
+		//	if (upDot < uprightDot)
+		//	{
+		//		// 0 at threshold, 1 at fully upside down (upDot = -1)
+		//		float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
+		//		tipPenalty = t * tipPenaltyScale;
+		//	}
+
+		//	// ----- Falling penalty -----
+		//	const float minY = -0.25f;   // set based on your ground height
+		//	const float fallPenalty = 50f;
+
+		//	float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+
+		//	// Combine
+		//	fitness = distReward - tipPenalty - fallenPenalty;
+
+		//	// Keep fitness non-negative (optional)
+		//	fitness = Mathf.Max(0f, fitness);
+
+		//	return fitness;
+		//}
+
 		public override float ComputeFitness()
 		{
 
-			// ---- Base reward: get closer to the target ----
+			// Reward: get closer to the target than you were at the start
 			float toTarget = (body.transform.position - target).magnitude;
-			toTarget = Mathf.Max(0.001f, toTarget); // avoid divide-by-zero
+			float progress = distance - toTarget;          // distance is start-to-target
+			float distReward = Mathf.Max(0f, progress);    // only reward moving closer
 
-			float d = distance / toTarget;
-
-			float distReward;
-			if (d <= 1f)
-			{
-				distReward = 0f;
-			}
-			else
-			{
-				distReward = Mathf.Pow(d, 2f);
-			}
-
-			// ----- Upright penalty -----
-			// 1 when perfectly upright, 0 when sideways, -1 when upside down.
+			// Upright penalty
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
-
-			// Ignore small leans
-			const float uprightDot = 0.7f; // ~45 degrees from upright
-			const float tipPenaltyScale = 5f;
+			const float uprightDot = 0.7f;
+			const float tipPenaltyScale = 1.0f;            // start smaller; increase later
 
 			float tipPenalty = 0f;
 			if (upDot < uprightDot)
 			{
-				// 0 at threshold, 1 at fully upside down (upDot = -1)
 				float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
 				tipPenalty = t * tipPenaltyScale;
 			}
 
-			// ----- Falling penalty -----
-			const float minY = -0.25f;   // set based on your ground height
-			const float fallPenalty = 50f;
-
+			// Falling penalty
+			const float minY = -0.25f;
+			const float fallPenalty = 5f;                  // start smaller; increase later
 			float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
 
-			// Combine
 			fitness = distReward - tipPenalty - fallenPenalty;
-
-			// Keep fitness non-negative (optional)
+			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
 			fitness = Mathf.Max(0f, fitness);
-
 			return fitness;
 		}
 
