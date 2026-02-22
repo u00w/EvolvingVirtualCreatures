@@ -297,7 +297,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 			// Reward: being upright (broad, safe shaping reward)
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up); // 1 upright, 0 sideways, -1 upside down
 			float upright01 = Mathf.InverseLerp(-1f, 1f, upDot);                 // 0..1
-			const float uprightRewardScale = 0.5f;
+			const float uprightRewardScale = 0.8f;
 			fitness += upright01 * uprightRewardScale;
 
 			// Penalty: tipped over past tolerance
@@ -312,7 +312,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 			// Penalty: fell below ground threshold
 			const float minY = -0.25f;
-			const float fallPenalty = 5f; // start small; increase later
+			const float fallPenalty = 8f; // start small; increase later
 			if (body.transform.position.y < minY) fitness -= fallPenalty;
 
 			// Final safety: keep finite and non-negative

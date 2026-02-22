@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3315638}
   - component: {fileID: 2325184}
   - component: {fileID: 11493026}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Back
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 3304478}
   - component: {fileID: 2373768}
   - component: {fileID: 11471040}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -210,7 +210,7 @@ GameObject:
   - component: {fileID: 3371848}
   - component: {fileID: 2300148}
   - component: {fileID: 11408410}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Down
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -309,7 +309,7 @@ GameObject:
   - component: {fileID: 11411962}
   - component: {fileID: 5427552}
   - component: {fileID: 6574544}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: JointSegment
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -416,7 +416,7 @@ GameObject:
   - component: {fileID: 3343092}
   - component: {fileID: 2333868}
   - component: {fileID: 11444318}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Up
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -515,7 +515,7 @@ GameObject:
   - component: {fileID: 3383294}
   - component: {fileID: 2334514}
   - component: {fileID: 11407220}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -614,7 +614,7 @@ GameObject:
   - component: {fileID: 3386152}
   - component: {fileID: 2360730}
   - component: {fileID: 11408522}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Front
   m_TagString: Untagged
   m_Icon: {fileID: 0}
