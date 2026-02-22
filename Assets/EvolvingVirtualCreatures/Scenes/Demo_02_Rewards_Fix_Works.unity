@@ -899,10 +899,10 @@ MonoBehaviour:
   offset: {x: 0, y: 1, z: 0}
   scoreLabelPrefab: {fileID: 123290, guid: 9e652898be87d468e93cb459073d45aa, type: 3}
   segmentPrefab: {fileID: 130552, guid: 45f4cf3e5e51e4ec4aeb2782953e56cf, type: 3}
-  mutationRate: 0.3
+  mutationRate: 1
   wps: 10
   automatic: 1
-  automaticInterval: 2
+  automaticInterval: 10
 --- !u!1 &1177148782
 GameObject:
   m_ObjectHideFlags: 0
@@ -945,7 +945,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 83e44e552d6dfd04aa338819665c91e2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

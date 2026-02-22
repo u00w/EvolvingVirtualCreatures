@@ -284,7 +284,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 			const float baseline = 0.001f;
 
 			// Small constant to keep early generations selectable even if they don't move yet
-			const float aliveBonus = 0.05f;
+			const float aliveBonus = 0.1f;
 
 			fitness = baseline + aliveBonus;
 
@@ -297,12 +297,12 @@ namespace mattatz.EvolvingVirtualCreatures {
 			// Reward: being upright (broad, safe shaping reward)
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up); // 1 upright, 0 sideways, -1 upside down
 			float upright01 = Mathf.InverseLerp(-1f, 1f, upDot);                 // 0..1
-			const float uprightRewardScale = 0.2f;
+			const float uprightRewardScale = 0.5f;
 			fitness += upright01 * uprightRewardScale;
 
 			// Penalty: tipped over past tolerance
 			const float uprightDot = 0.7f;
-			const float tipPenaltyScale = 0.5f; // start small; increase later
+			const float tipPenaltyScale = 1.0f; // start small; increase later
 			if (upDot < uprightDot)
 			{
 				float t = Mathf.InverseLerp(uprightDot, -1f, upDot); // 0..1
@@ -312,7 +312,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 			// Penalty: fell below ground threshold
 			const float minY = -0.25f;
-			const float fallPenalty = 2f; // start small; increase later
+			const float fallPenalty = 5f; // start small; increase later
 			if (body.transform.position.y < minY) fitness -= fallPenalty;
 
 			// Final safety: keep finite and non-negative
