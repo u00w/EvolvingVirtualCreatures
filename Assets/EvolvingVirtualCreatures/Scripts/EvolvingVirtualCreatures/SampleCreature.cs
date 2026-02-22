@@ -189,34 +189,50 @@ namespace mattatz.EvolvingVirtualCreatures {
 		//	return fitness;
 		//}
 
-		public override float ComputeFitness()
-		{
+		//02
+		//public override float ComputeFitness()
+		//{
 
-			// Reward: get closer to the target than you were at the start
-			float toTarget = (body.transform.position - target).magnitude;
-			float progress = distance - toTarget;          // distance is start-to-target
-			float distReward = Mathf.Max(0f, progress);    // only reward moving closer
+		//	// Reward: get closer to the target than you were at the start
+		//	float toTarget = (body.transform.position - target).magnitude;
+		//	float progress = distance - toTarget;          // distance is start-to-target
+		//	float distReward = Mathf.Max(0f, progress);    // only reward moving closer
 
-			// Upright penalty
-			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
-			const float uprightDot = 0.7f;
-			const float tipPenaltyScale = 1.0f;            // start smaller; increase later
+		//	// Upright penalty
+		//	float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
+		//	const float uprightDot = 0.7f;
+		//	const float tipPenaltyScale = 1.0f;            // start smaller; increase later
 
-			float tipPenalty = 0f;
-			if (upDot < uprightDot)
-			{
-				float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
-				tipPenalty = t * tipPenaltyScale;
-			}
+		//	float tipPenalty = 0f;
+		//	if (upDot < uprightDot)
+		//	{
+		//		float t = Mathf.InverseLerp(uprightDot, -1f, upDot);
+		//		tipPenalty = t * tipPenaltyScale;
+		//	}
 
-			// Falling penalty
-			const float minY = -0.25f;
-			const float fallPenalty = 5f;                  // start smaller; increase later
-			float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
+		//	// Falling penalty
+		//	const float minY = -0.25f;
+		//	const float fallPenalty = 5f;                  // start smaller; increase later
+		//	float fallenPenalty = (body.transform.position.y < minY) ? fallPenalty : 0f;
 
-			fitness = distReward - tipPenalty - fallenPenalty;
+		//	fitness = distReward - tipPenalty - fallenPenalty;
+		//	if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
+		//	fitness = Mathf.Max(0f, fitness);
+		//	return fitness;
+		//}
+
+		//simple check
+		public override float ComputeFitness(){
+
+			// Base: distance from where this creature started
+			float dist = (body.transform.position - origin).magnitude;
+
+			// Small baseline so early generations aren't all exactly 0
+			fitness = 0.001f + dist;
+
+			// Keep it sane
 			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = 0f;
-			fitness = Mathf.Max(0f, fitness);
+
 			return fitness;
 		}
 
