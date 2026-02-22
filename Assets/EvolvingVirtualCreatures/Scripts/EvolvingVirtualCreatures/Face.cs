@@ -4,10 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 using mattatz.Utils;
+using System;
 
 namespace mattatz.EvolvingVirtualCreatures {
 
 	public class Face : MonoBehaviour {
+
+		private static readonly Color faceCol = new Color(0.49f, 0.62f, 0.85f, 0.8f);
 
 		public Collider collider { get { return GetComponent<Collider>(); } }
 		public bool Contact { 
@@ -60,9 +63,9 @@ namespace mattatz.EvolvingVirtualCreatures {
 			var found = edges.Find(edge => !floor.SameSide(transform.TransformPoint(edge.v0), transform.TransformPoint(edge.v1)));
 
 			if(found != null) {
-				material.SetColor("_Color", Color.red);
+				material.SetColor("_Color", Color.magenta);
 			} else {
-				material.SetColor("_Color", Color.white);
+				material.SetColor("_Color", faceCol);
 			}
 
 			return found != null;
@@ -70,12 +73,12 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 		void OnCollisionEnter (Collision collision) {
 			contact = (collision.gameObject.layer == LayerMask.NameToLayer("Floor")); 
-			material.SetColor("_Color", Color.red);
+			material.SetColor("_Color", Color.magenta);
 		}
 
 		void OnCollisionExit (Collision collision) {
 			contact = false;
-			material.SetColor("_Color", Color.white);
+			material.SetColor("_Color", faceCol);
 		}
 
 		void OnDrawGizmos () {

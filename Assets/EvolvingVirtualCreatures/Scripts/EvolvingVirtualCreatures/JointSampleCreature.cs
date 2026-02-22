@@ -152,7 +152,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 		}
 
 		public override void DrawGizmos () {
-			Gizmos.color = Color.red;
+			Gizmos.color = Color.magenta;
 			Gizmos.DrawLine(body.transform.position, target);
 			Gizmos.DrawWireSphere(target, 1f);
 		}

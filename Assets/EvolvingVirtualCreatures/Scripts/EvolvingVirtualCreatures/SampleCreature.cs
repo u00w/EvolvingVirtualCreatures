@@ -382,7 +382,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 			// Accessing body.transform then throws MissingReferenceException.
 			if (body == null) return;
 
-			Gizmos.color = Color.red;
+			Gizmos.color = Color.magenta;
 			Gizmos.DrawLine(body.transform.position, target);
 			Gizmos.DrawWireSphere(target, 1f);
 		}

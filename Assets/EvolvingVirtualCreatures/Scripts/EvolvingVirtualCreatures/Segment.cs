@@ -204,7 +204,7 @@ namespace mattatz.EvolvingVirtualCreatures {
 
 		void OnDrawGizmosSelected () {
 			if(anchor == null) return;
-			Gizmos.color = Color.red;
+			Gizmos.color = Color.magenta;
 			Gizmos.DrawWireSphere(anchor.position, 0.2f);
 		}
 
