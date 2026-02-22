@@ -1,20 +1,219 @@
-//using UnityEngine;
-//using UnityEngine.UI;
-//using Random = UnityEngine.Random;
+////using UnityEngine;
+////using UnityEngine.UI;
+////using Random = UnityEngine.Random;
 
-//using System;
-//using System.Linq;
-//using System.Collections;
-//using System.Collections.Generic;
+////using System;
+////using System.Linq;
+////using System.Collections;
+////using System.Collections.Generic;
+
+////using mattatz.GeneticAlgorithm;
+////using mattatz.NeuralNetworks;
+
+////using mattatz.Utils;
+
+////namespace mattatz.EvolvingVirtualCreatures {
+
+////	public class Factory : MonoBehaviour {
+
+////		Population population;
+////		[SerializeField] Text generationLabel;
+
+////		[SerializeField] float size = 5f;
+////		[SerializeField] int count = 50;
+////		[SerializeField] Vector3 offset = Vector3.up;
+
+////		[SerializeField] GameObject scoreLabelPrefab;
+////		[SerializeField] GameObject segmentPrefab;
+
+////		[SerializeField, Range(0.0f, 1.0f)] float mutationRate = 0.2f;
+
+////        [SerializeField] float wps = 30f; // working per seconds
+
+////		[SerializeField] bool automatic = true;
+////		[SerializeField] float automaticInterval = 40f;
+////		Coroutine routine;
+////		bool stopping = false;
+
+////		Dictionary<Creature, TextMesh> scoreLabels = new Dictionary<Creature, TextMesh>();
+////		Node root;
+
+////		void Start () {
+////			Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Creature"), LayerMask.NameToLayer("Creature"));
+
+////			Begin();
+////		}
+
+////		public void Begin () {
+////			population = new Population(mutationRate);
+
+////			root = new Node(Vector3.one * 0.5f);
+////			var leftArm0 = new Node(new Vector3(0.8f, 0.2f, 0.2f));
+////			var leftArm1 = new Node(new Vector3(0.6f, 0.15f, 0.15f));
+////			var rightArm0 = new Node(new Vector3(0.8f, 0.2f, 0.2f));
+////			var rightArm1 = new Node(new Vector3(0.6f, 0.15f, 0.15f));
+
+////			root.Connect(leftArm0, SideType.Left);
+////			root.Connect(rightArm0, SideType.Right);
+
+////			leftArm0.Connect(leftArm1, SideType.Left);
+////			rightArm0.Connect(rightArm1, SideType.Right);
+
+////			int hcount = Mathf.FloorToInt(count * 0.5f);
+////			for(int i = 0; i < count; i++) {
+////				var position = new Vector3((i - hcount) * size, 0f, 0f) + offset;
+////				SampleCreature creature = CreateCreature(i.ToString(), root, position);
+////				population.AddCreature(creature);
+////			}
+
+////			population.Setup();
+
+////            wps = Mathf.Max(10f, wps);
+
+////			float dt = 1f / wps;
+////            StartCoroutine(Repeat(dt, () => {
+////				if(!stopping) {
+////					population.Work(dt);
+////					population.ComputeFitness();
+////				}
+////            }));
+
+////			if(automatic) {
+////				Automation();
+////			}
+////		}
+
+////		void Update () {
+////			foreach(Creature c in scoreLabels.Keys) {
+////				var label = scoreLabels[c];
+////				label.text = c.Fitness.ToString();
+////			}
+////		}
+
+////        IEnumerator Repeat(float interval, Action action) {
+////            yield return 0;
+////			while(true) {
+////				yield return new WaitForSeconds(interval);
+////                action();
+////			}
+////        }
+
+////		public void Reproduction () {
+////			population.ComputeFitness();
+
+////			var ancestors = new List<Creature>(population.Creatures);
+////			int hcount = Mathf.FloorToInt(ancestors.Count * 0.5f);
+
+////			scoreLabels.Clear();
+
+////			population.mutationRate = mutationRate;
+////			population.Reproduction((DNA dna, int index, int count) => {
+////				var position = new Vector3((index - hcount) * size, 0f, 0f) + offset;
+////				return CreateCreature(index.ToString(), root, position, dna);
+////			}, new Vector2(-1f, 1f));
+
+////			ancestors.ForEach(ancestor => {
+////				var go = (ancestor as SampleCreature).Body.gameObject;
+////				Destroy(go);
+////			});
+
+////			population.Setup();
+////			generationLabel.text = population.Generations.ToString();
+////		}
+
+////		public void Automation () {
+////			if(routine != null) StopCoroutine(routine);
+////			routine = StartCoroutine(Repeat(automaticInterval, () => {
+////				if(!stopping) Reproduction();
+////			}));
+////		}
+
+////		public void Stop () {
+////			stopping = !stopping;
+////			// Debug.Log (stopping);
+////			if(stopping) {
+////				population.Creatures.ForEach(c => c.Sleep());
+////			} else {
+////				population.Creatures.ForEach(c => c.WakeUp());
+////			}
+////		}
+
+////		SampleCreature CreateCreature (string label, Node root, Vector3 position, DNA dna = null) {
+////			var body = Build (root);
+////			//new
+////			int creatureLayer = LayerMask.NameToLayer("Creature");
+////			SetLayerRecursively(body.gameObject, creatureLayer);
+////			//new
+////			body.transform.position = position;
+
+////			SampleCreature creature;
+////			if(dna == null) {
+////				creature = new SampleCreature(body);
+////			} else {
+////				creature = new SampleCreature(body, dna);
+////			}
+
+////			var tm = Instantiate(scoreLabelPrefab).GetComponent<TextMesh>();
+////			tm.transform.parent = creature.Body.transform;
+////			tm.transform.localPosition = Vector3.zero;
+////			scoreLabels.Add(creature, tm);
+
+////			return creature;
+////		}
+
+////		public Segment Build (Node root) {
+////			var parent = Instantiate(segmentPrefab).GetComponent<Segment>();
+////			parent.SetRoot(true);
+////			parent.transform.localScale = root.Size;
+////			var cons = root.GetConnections();
+////			for(int i = 0, n = cons.Length; i < n; i++) {
+////				var con = cons[i];
+////				Build (parent, con.Side, con.To);
+////			}
+////			return parent;
+////		}
+
+////		void Build (Segment parentSegment, SideType side, Node childNode) {
+////			var cur = Instantiate(segmentPrefab).GetComponent<Segment>();
+////			cur.transform.localScale = childNode.Size;
+////			cur.Connect(parentSegment, side);
+////			var cons = childNode.GetConnections();
+////			for(int i = 0, n = cons.Length; i < n; i++) {
+////				var con = cons[i];
+////				Build (cur, con.Side, con.To);
+////			}
+////		}
+
+////		public void OnTimeScaleChanged (float scale) {
+////			Time.timeScale = scale;
+////		}
+
+////		void OnDrawGizmos () {
+////			if(!Application.isPlaying) return;
+////			population.Creatures.ForEach(c => c.DrawGizmos());
+////		}
+
+////	}
+
+////}
 
 //using mattatz.GeneticAlgorithm;
 //using mattatz.NeuralNetworks;
-
 //using mattatz.Utils;
+//using System;
+//using System.Collections;
+//using System.Collections.Generic;
+//using System.Linq;
+//using UnityEngine;
+//using UnityEngine.UI;
+////using static System.Net.Mime.MediaTypeNames;
+//using Random = UnityEngine.Random;
 
-//namespace mattatz.EvolvingVirtualCreatures {
+//namespace mattatz.EvolvingVirtualCreatures
+//{
 
-//	public class Factory : MonoBehaviour {
+//	public class Factory : MonoBehaviour
+//	{
 
 //		Population population;
 //		[SerializeField] Text generationLabel;
@@ -28,7 +227,7 @@
 
 //		[SerializeField, Range(0.0f, 1.0f)] float mutationRate = 0.2f;
 
-//        [SerializeField] float wps = 30f; // working per seconds
+//		[SerializeField] float wps = 30f; // working per seconds
 
 //		[SerializeField] bool automatic = true;
 //		[SerializeField] float automaticInterval = 40f;
@@ -38,13 +237,20 @@
 //		Dictionary<Creature, TextMesh> scoreLabels = new Dictionary<Creature, TextMesh>();
 //		Node root;
 
-//		void Start () {
-//			Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Creature"), LayerMask.NameToLayer("Creature"));
+//		void Start()
+//		{
+//			// NOTE: this only works if your spawned segments are actually on the "Creature" layer.
+//			int creatureLayer = LayerMask.NameToLayer("Creature");
+//			if (creatureLayer != -1)
+//			{
+//				Physics.IgnoreLayerCollision(creatureLayer, creatureLayer);
+//			}
 
 //			Begin();
 //		}
 
-//		public void Begin () {
+//		public void Begin()
+//		{
 //			population = new Population(mutationRate);
 
 //			root = new Node(Vector3.one * 0.5f);
@@ -60,7 +266,8 @@
 //			rightArm0.Connect(rightArm1, SideType.Right);
 
 //			int hcount = Mathf.FloorToInt(count * 0.5f);
-//			for(int i = 0; i < count; i++) {
+//			for (int i = 0; i < count; i++)
+//			{
 //				var position = new Vector3((i - hcount) * size, 0f, 0f) + offset;
 //				SampleCreature creature = CreateCreature(i.ToString(), root, position);
 //				population.AddCreature(creature);
@@ -68,37 +275,44 @@
 
 //			population.Setup();
 
-//            wps = Mathf.Max(10f, wps);
+//			wps = Mathf.Max(10f, wps);
 
 //			float dt = 1f / wps;
-//            StartCoroutine(Repeat(dt, () => {
-//				if(!stopping) {
+//			StartCoroutine(Repeat(dt, () => {
+//				if (!stopping)
+//				{
 //					population.Work(dt);
 //					population.ComputeFitness();
 //				}
-//            }));
+//			}));
 
-//			if(automatic) {
+//			if (automatic)
+//			{
 //				Automation();
 //			}
 //		}
 
-//		void Update () {
-//			foreach(Creature c in scoreLabels.Keys) {
+//		void Update()
+//		{
+//			foreach (Creature c in scoreLabels.Keys)
+//			{
 //				var label = scoreLabels[c];
 //				label.text = c.Fitness.ToString();
 //			}
 //		}
 
-//        IEnumerator Repeat(float interval, Action action) {
-//            yield return 0;
-//			while(true) {
+//		IEnumerator Repeat(float interval, Action action)
+//		{
+//			yield return 0;
+//			while (true)
+//			{
 //				yield return new WaitForSeconds(interval);
-//                action();
+//				action();
 //			}
-//        }
+//		}
 
-//		public void Reproduction () {
+//		public void Reproduction()
+//		{
 //			population.ComputeFitness();
 
 //			var ancestors = new List<Creature>(population.Creatures);
@@ -121,35 +335,47 @@
 //			generationLabel.text = population.Generations.ToString();
 //		}
 
-//		public void Automation () {
-//			if(routine != null) StopCoroutine(routine);
+//		public void Automation()
+//		{
+//			if (routine != null) StopCoroutine(routine);
 //			routine = StartCoroutine(Repeat(automaticInterval, () => {
-//				if(!stopping) Reproduction();
+//				if (!stopping) Reproduction();
 //			}));
 //		}
 
-//		public void Stop () {
+//		public void Stop()
+//		{
 //			stopping = !stopping;
-//			// Debug.Log (stopping);
-//			if(stopping) {
+//			if (stopping)
+//			{
 //				population.Creatures.ForEach(c => c.Sleep());
-//			} else {
+//			}
+//			else
+//			{
 //				population.Creatures.ForEach(c => c.WakeUp());
 //			}
 //		}
 
-//		SampleCreature CreateCreature (string label, Node root, Vector3 position, DNA dna = null) {
-//			var body = Build (root);
-//			//new
+//		SampleCreature CreateCreature(string label, Node root, Vector3 position, DNA dna = null)
+//		{
+//			var body = Build(root);
+
+//			// NEW: ensure creature parts are on the Creature layer (so IgnoreLayerCollision works)
 //			int creatureLayer = LayerMask.NameToLayer("Creature");
-//			SetLayerRecursively(body.gameObject, creatureLayer);
-//			//new
+//			if (creatureLayer != -1)
+//			{
+//				SetLayerRecursively(body.gameObject, creatureLayer);
+//			}
+
 //			body.transform.position = position;
 
 //			SampleCreature creature;
-//			if(dna == null) {
+//			if (dna == null)
+//			{
 //				creature = new SampleCreature(body);
-//			} else {
+//			}
+//			else
+//			{
 //				creature = new SampleCreature(body, dna);
 //			}
 
@@ -161,35 +387,51 @@
 //			return creature;
 //		}
 
-//		public Segment Build (Node root) {
+//		// NEW: helper to apply the layer to spawned hierarchy
+//		static void SetLayerRecursively(GameObject go, int layer)
+//		{
+//			go.layer = layer;
+//			for (int i = 0; i < go.transform.childCount; i++)
+//			{
+//				SetLayerRecursively(go.transform.GetChild(i).gameObject, layer);
+//			}
+//		}
+
+//		public Segment Build(Node root)
+//		{
 //			var parent = Instantiate(segmentPrefab).GetComponent<Segment>();
 //			parent.SetRoot(true);
 //			parent.transform.localScale = root.Size;
 //			var cons = root.GetConnections();
-//			for(int i = 0, n = cons.Length; i < n; i++) {
+//			for (int i = 0, n = cons.Length; i < n; i++)
+//			{
 //				var con = cons[i];
-//				Build (parent, con.Side, con.To);
+//				Build(parent, con.Side, con.To);
 //			}
 //			return parent;
 //		}
 
-//		void Build (Segment parentSegment, SideType side, Node childNode) {
+//		void Build(Segment parentSegment, SideType side, Node childNode)
+//		{
 //			var cur = Instantiate(segmentPrefab).GetComponent<Segment>();
 //			cur.transform.localScale = childNode.Size;
 //			cur.Connect(parentSegment, side);
 //			var cons = childNode.GetConnections();
-//			for(int i = 0, n = cons.Length; i < n; i++) {
+//			for (int i = 0, n = cons.Length; i < n; i++)
+//			{
 //				var con = cons[i];
-//				Build (cur, con.Side, con.To);
+//				Build(cur, con.Side, con.To);
 //			}
 //		}
 
-//		public void OnTimeScaleChanged (float scale) {
+//		public void OnTimeScaleChanged(float scale)
+//		{
 //			Time.timeScale = scale;
 //		}
 
-//		void OnDrawGizmos () {
-//			if(!Application.isPlaying) return;
+//		void OnDrawGizmos()
+//		{
+//			if (!Application.isPlaying) return;
 //			population.Creatures.ForEach(c => c.DrawGizmos());
 //		}
 
@@ -203,10 +445,11 @@ using mattatz.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-//using static System.Net.Mime.MediaTypeNames;
+using static System.Net.Mime.MediaTypeNames;
 using Random = UnityEngine.Random;
 
 namespace mattatz.EvolvingVirtualCreatures
@@ -239,11 +482,15 @@ namespace mattatz.EvolvingVirtualCreatures
 
 		void Start()
 		{
-			// NOTE: this only works if your spawned segments are actually on the "Creature" layer.
+			// Ignore Creature-vs-Creature collisions (only works if that layer exists)
 			int creatureLayer = LayerMask.NameToLayer("Creature");
-			if (creatureLayer != -1)
+			if (creatureLayer == -1)
 			{
-				Physics.IgnoreLayerCollision(creatureLayer, creatureLayer);
+				Debug.LogError("Layer 'Creature' does not exist. Create it in Project Settings > Tags and Layers.");
+			}
+			else
+			{
+				Physics.IgnoreLayerCollision(creatureLayer, creatureLayer, true);
 			}
 
 			Begin();
@@ -265,10 +512,16 @@ namespace mattatz.EvolvingVirtualCreatures
 			leftArm0.Connect(leftArm1, SideType.Left);
 			rightArm0.Connect(rightArm1, SideType.Right);
 
-			int hcount = Mathf.FloorToInt(count * 0.5f);
+			// Spawn in a grid (prevents overlap)
+			int cols = 8;
+			float spacing = size;
+
 			for (int i = 0; i < count; i++)
 			{
-				var position = new Vector3((i - hcount) * size, 0f, 0f) + offset;
+				int x = i % cols;
+				int z = i / cols;
+				var position = new Vector3((x - cols * 0.5f) * spacing, 0f, z * spacing) + offset;
+
 				SampleCreature creature = CreateCreature(i.ToString(), root, position);
 				population.AddCreature(creature);
 			}
@@ -294,10 +547,10 @@ namespace mattatz.EvolvingVirtualCreatures
 
 		void Update()
 		{
-			foreach (Creature c in scoreLabels.Keys)
+			// safer enumeration than iterating Keys then indexing back into the dictionary
+			foreach (var kvp in scoreLabels)
 			{
-				var label = scoreLabels[c];
-				label.text = c.Fitness.ToString();
+				kvp.Value.text = kvp.Key.Fitness.ToString();
 			}
 		}
 
@@ -316,13 +569,18 @@ namespace mattatz.EvolvingVirtualCreatures
 			population.ComputeFitness();
 
 			var ancestors = new List<Creature>(population.Creatures);
-			int hcount = Mathf.FloorToInt(ancestors.Count * 0.5f);
 
 			scoreLabels.Clear();
 
+			// Respawn in same grid
+			int cols = 8;
+			float spacing = size;
+
 			population.mutationRate = mutationRate;
-			population.Reproduction((DNA dna, int index, int count) => {
-				var position = new Vector3((index - hcount) * size, 0f, 0f) + offset;
+			population.Reproduction((DNA dna, int index, int total) => {
+				int x = index % cols;
+				int z = index / cols;
+				var position = new Vector3((x - cols * 0.5f) * spacing, 0f, z * spacing) + offset;
 				return CreateCreature(index.ToString(), root, position, dna);
 			}, new Vector2(-1f, 1f));
 
@@ -360,7 +618,7 @@ namespace mattatz.EvolvingVirtualCreatures
 		{
 			var body = Build(root);
 
-			// NEW: ensure creature parts are on the Creature layer (so IgnoreLayerCollision works)
+			// Force all spawned segments onto Creature layer
 			int creatureLayer = LayerMask.NameToLayer("Creature");
 			if (creatureLayer != -1)
 			{
@@ -387,7 +645,6 @@ namespace mattatz.EvolvingVirtualCreatures
 			return creature;
 		}
 
-		// NEW: helper to apply the layer to spawned hierarchy
 		static void SetLayerRecursively(GameObject go, int layer)
 		{
 			go.layer = layer;
@@ -438,4 +695,3 @@ namespace mattatz.EvolvingVirtualCreatures
 	}
 
 }
-
