@@ -66,23 +66,35 @@ namespace mattatz.GeneticAlgorithm {
 				return;
 			}
 
-            for(int i = 0, n = creatures.Count; i < n; i++) {
-                // Sping the wheel of fortune to pick two parents
-				int m = Random.Range(0, pool.Count);
-				int d = Random.Range(0, pool.Count);
+			// Elitism: carry the top creatures' DNA forward unchanged (no crossover/mutation).
+			// The spawner still creates fresh bodies at their grid positions, so the old
+			// bodies are destroyed safely — only the weights are preserved.
+			// Capped at 2 elites; disabled when population is too small to keep diversity.
+			int n = creatures.Count;
+			int eliteCount = n > 4 ? 2 : 0;
+			var elite = creatures.OrderByDescending(c => c.Fitness).Take(eliteCount).ToList();
 
-                // Pick two parents
-                DNA mom = pool[m].DNA;
-				DNA dad = pool[d].DNA;
+            for(int i = 0; i < n; i++) {
+                DNA childDNA;
+				if (i < eliteCount) {
+					// Preserve elite DNA exactly — no crossover, no mutation
+					childDNA = elite[i].DNA;
+				} else {
+	                // Spin the wheel of fortune to pick two parents
+					int m = Random.Range(0, pool.Count);
+					int d = Random.Range(0, pool.Count);
 
-                // Mate their genes
-                DNA child = mom.Crossover(dad);
+	                // Pick two parents
+	                DNA mom = pool[m].DNA;
+					DNA dad = pool[d].DNA;
 
-                // Mutate their genes
-                child.Mutate(mutationRate, range);
+	                // Mate and mutate
+	                childDNA = mom.Crossover(dad);
+	                childDNA.Mutate(mutationRate, range);
+				}
 
-                // Fill the new population with the new child
-				creatures[i] = spawner(child, i, n);
+                // Fill the new population (new body, same weights for elites)
+				creatures[i] = spawner(childDNA, i, n);
             }
 		}
 

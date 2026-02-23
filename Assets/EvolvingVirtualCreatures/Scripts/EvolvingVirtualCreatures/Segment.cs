@@ -347,8 +347,13 @@ namespace mattatz.EvolvingVirtualCreatures
 
 		void FixedUpdate()
 		{
-			axisAngle = Mathf.Lerp(axisAngle, toAxisAngle, Time.fixedDeltaTime);
-			secondaryAxisAngle = Mathf.Lerp(secondaryAxisAngle, toSecondaryAxisAngle, Time.fixedDeltaTime);
+			// Multiply by 5 so limbs reach their target pose in ~1 second instead of ~5 seconds.
+			// At the default fixedDeltaTime (0.02) and wps=30, each Work() tick covers only
+			// ~1.7 physics frames. Without this multiplier, limbs barely move between network
+			// updates, making any learned gait invisible at runtime.
+			float lerpSpeed = Time.fixedDeltaTime * 5f;
+			axisAngle = Mathf.Lerp(axisAngle, toAxisAngle, lerpSpeed);
+			secondaryAxisAngle = Mathf.Lerp(secondaryAxisAngle, toSecondaryAxisAngle, lerpSpeed);
 			Apply();
 		}
 
