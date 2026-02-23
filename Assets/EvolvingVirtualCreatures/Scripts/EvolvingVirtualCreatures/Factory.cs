@@ -57,17 +57,26 @@ namespace mattatz.EvolvingVirtualCreatures
 		{
 			population = new Population(mutationRate);
 
+			// Body plan: a torso with two legs (front and back).
+			// Legs are attached on the Forward and Back sides so that their primary
+			// rotation axis (Z / forward-backward swing) directly generates locomotion.
+			// Each leg has a lower segment attached on the Down side; the Down attachment's
+			// axis is Back (also Z-rotation = forward-backward swing), giving the creature
+			// a knee-like DOF that can push off the ground and produce forward thrust.
+			//
+			// This replaces the previous L/R arm morphology, which attached on the X axis
+			// and therefore could not generate any Z-direction (forward) ground thrust.
 			root = new Node(Vector3.one * 0.5f);
-			var leftArm0 = new Node(new Vector3(0.8f, 0.2f, 0.2f));
-			var leftArm1 = new Node(new Vector3(0.6f, 0.15f, 0.15f));
-			var rightArm0 = new Node(new Vector3(0.8f, 0.2f, 0.2f));
-			var rightArm1 = new Node(new Vector3(0.6f, 0.15f, 0.15f));
+			var frontLeg  = new Node(new Vector3(0.25f, 0.6f, 0.25f));
+			var frontLower = new Node(new Vector3(0.2f,  0.5f, 0.2f));
+			var backLeg   = new Node(new Vector3(0.25f, 0.6f, 0.25f));
+			var backLower  = new Node(new Vector3(0.2f,  0.5f, 0.2f));
 
-			root.Connect(leftArm0, SideType.Left);
-			root.Connect(rightArm0, SideType.Right);
+			root.Connect(frontLeg,  SideType.Forward);
+			root.Connect(backLeg,   SideType.Back);
 
-			leftArm0.Connect(leftArm1, SideType.Left);
-			rightArm0.Connect(rightArm1, SideType.Right);
+			frontLeg.Connect(frontLower, SideType.Down);
+			backLeg.Connect(backLower,   SideType.Down);
 
 			// Spawn in a grid (prevents overlap)
 			int cols = 8;

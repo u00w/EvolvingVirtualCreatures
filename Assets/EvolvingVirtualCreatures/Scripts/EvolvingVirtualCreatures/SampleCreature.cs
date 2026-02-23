@@ -44,9 +44,14 @@ namespace mattatz.EvolvingVirtualCreatures
 			forward = body.transform.forward;
 			target = origin + forward * distance;
 
-			// Gravity sensor first — tells the network world-up in body-local space.
+			// Gravity sensor — tells the network world-up in body-local space.
 			// Added before GetAllSegments so its 3 outputs come first in the input vector.
 			sensors.Add(new GravitySensor(body.transform));
+			// Time sensor — provides sin/cos oscillation inputs so the stateless feed-forward
+			// network can produce rhythmic, phase-alternating limb motion (walking gaits).
+			// Without this, the same body state always produces the same network output,
+			// meaning limbs can only hold static poses and the creature cannot walk.
+			sensors.Add(new TimeSensor(1f));
 			GetAllSegments(body);
 
 			this.dna = new DNA(GetGenesCount(), new Vector2(-1f, 1f));
@@ -62,9 +67,14 @@ namespace mattatz.EvolvingVirtualCreatures
 			forward = body.transform.forward;
 			target = origin + forward * distance;
 
-			// Gravity sensor first — tells the network world-up in body-local space.
+			// Gravity sensor — tells the network world-up in body-local space.
 			// Added before GetAllSegments so its 3 outputs come first in the input vector.
 			sensors.Add(new GravitySensor(body.transform));
+			// Time sensor — provides sin/cos oscillation inputs so the stateless feed-forward
+			// network can produce rhythmic, phase-alternating limb motion (walking gaits).
+			// Without this, the same body state always produces the same network output,
+			// meaning limbs can only hold static poses and the creature cannot walk.
+			sensors.Add(new TimeSensor(1f));
 			GetAllSegments(body);
 
 			this.dna = dna;
@@ -224,9 +234,11 @@ namespace mattatz.EvolvingVirtualCreatures
 			var inputLayer = sensors.Aggregate(0, (prod, next) => prod + next.OutputCount());
 
 			// Two hidden layers of fixed width 32.
-			// The previous design set hiddenLayer = inputLayer (45→45→45→45→45→10 = 8550 params).
-			// Reducing to 48→32→32→10 = 2880 params cuts the GA search space by 3×,
-			// dramatically improving how fast the population converges.
+			// Inputs: GravitySensor(3) + TimeSensor(2)
+			//       + 5 segments × (AnchorAngle(3) + Contacts(6))
+			//       = root + frontLeg + frontLower + backLeg + backLower = 5 segments → 50 inputs total
+			// Outputs: 5 segments × 2 = 10  (root segment anchor is null so its 2 outputs are no-ops)
+			// Params: 50×32 + 32×32 + 32×10 = 2944 — a tractable search space for a GA.
 			const int hiddenDepth = 2;
 			const int hiddenLayer = 32;
 
