@@ -29,6 +29,12 @@ namespace mattatz.EvolvingVirtualCreatures
 		protected Vector3 origin;
 		protected Vector3 forward;
 
+		// Time-averaged fitness: accumulated over all ticks since last Setup().
+		// Using a running average ensures selection reflects sustained performance
+		// rather than the creature's state at one arbitrary snapshot moment.
+		int fitnessSteps = 0;
+		float fitnessSum = 0f;
+
 		public SampleCreature(Segment body)
 		{
 			this.body = body;
@@ -38,6 +44,9 @@ namespace mattatz.EvolvingVirtualCreatures
 			forward = body.transform.forward;
 			target = origin + forward * distance;
 
+			// Gravity sensor first — tells the network world-up in body-local space.
+			// Added before GetAllSegments so its 3 outputs come first in the input vector.
+			sensors.Add(new GravitySensor(body.transform));
 			GetAllSegments(body);
 
 			this.dna = new DNA(GetGenesCount(), new Vector2(-1f, 1f));
@@ -53,6 +62,9 @@ namespace mattatz.EvolvingVirtualCreatures
 			forward = body.transform.forward;
 			target = origin + forward * distance;
 
+			// Gravity sensor first — tells the network world-up in body-local space.
+			// Added before GetAllSegments so its 3 outputs come first in the input vector.
+			sensors.Add(new GravitySensor(body.transform));
 			GetAllSegments(body);
 
 			this.dna = dna;
@@ -67,6 +79,10 @@ namespace mattatz.EvolvingVirtualCreatures
 			origin = body.transform.position;
 			forward = body.transform.forward;
 			target = origin + forward * distance;
+
+			// Reset time-average accumulators for the new generation
+			fitnessSteps = 0;
+			fitnessSum = 0f;
 		}
 
 		public override Creature Generate(DNA dna)
@@ -105,7 +121,9 @@ namespace mattatz.EvolvingVirtualCreatures
 		public override float ComputeFitness()
 		{
 			const float baseline = 0.001f;
-			fitness = baseline;
+
+			// Compute instantaneous fitness for this tick
+			float instant = baseline;
 
 			// --- Standing reward ---
 			// upDot: 1 when body's up-axis aligns with world-up (upright), 0 sideways, -1 inverted.
@@ -115,7 +133,7 @@ namespace mattatz.EvolvingVirtualCreatures
 			float upDot = Vector3.Dot(body.transform.up.normalized, Vector3.up);
 			float standingFactor = Mathf.Clamp01(upDot);
 			const float standingRewardScale = 2.0f;
-			fitness += standingFactor * standingRewardScale;
+			instant += standingFactor * standingRewardScale;
 
 			// --- Height reward ---
 			// Reward the body staying near its spawn height (i.e., not collapsed onto the floor).
@@ -133,7 +151,7 @@ namespace mattatz.EvolvingVirtualCreatures
 				heightRatio = Mathf.Clamp01(body.transform.position.y / 1.0f);
 			}
 			const float heightRewardScale = 0.5f;
-			fitness += heightRatio * heightRewardScale;
+			instant += heightRatio * heightRewardScale;
 
 			// --- Walking reward (forward progress gated by standing) ---
 			// A creature that rolls or crawls (standingFactor ≈ 0) earns no forward bonus,
@@ -142,7 +160,7 @@ namespace mattatz.EvolvingVirtualCreatures
 			float forwardProgress = Vector3.Dot(delta, forward.normalized); // negative = moving backward
 			float forwardReward = Mathf.Max(0f, forwardProgress);
 			const float walkRewardScale = 2.0f;
-			fitness += forwardReward * standingFactor * walkRewardScale;
+			instant += forwardReward * standingFactor * walkRewardScale;
 
 			// --- Tip penalty ---
 			// Penalize leaning more than ~60 degrees from vertical (upDot < 0.5).
@@ -153,13 +171,23 @@ namespace mattatz.EvolvingVirtualCreatures
 			if (upDot < tipThreshold)
 			{
 				float t = Mathf.InverseLerp(tipThreshold, -1f, upDot); // 0..1
-				fitness -= t * tipPenaltyScale;
+				instant -= t * tipPenaltyScale;
 			}
 
 			// --- Fall penalty ---
 			const float minY = -0.25f;
 			const float fallPenalty = 10f;
-			if (body.transform.position.y < minY) fitness -= fallPenalty;
+			if (body.transform.position.y < minY) instant -= fallPenalty;
+
+			instant = Mathf.Max(baseline, instant);
+
+			// Time-average: accumulate over every tick since Setup().
+			// Selection reads creature.Fitness at the end of the generation, so using
+			// the running average rewards creatures that stand/walk consistently, not
+			// those that happen to be upright at one lucky snapshot moment.
+			fitnessSum += instant;
+			fitnessSteps++;
+			fitness = fitnessSum / fitnessSteps;
 
 			// Safety clamps
 			if (float.IsNaN(fitness) || float.IsInfinity(fitness)) fitness = baseline;
@@ -195,8 +223,12 @@ namespace mattatz.EvolvingVirtualCreatures
 		{
 			var inputLayer = sensors.Aggregate(0, (prod, next) => prod + next.OutputCount());
 
-			const int hiddenDepth = 4;
-			var hiddenLayer = inputLayer;
+			// Two hidden layers of fixed width 32.
+			// The previous design set hiddenLayer = inputLayer (45→45→45→45→45→10 = 8550 params).
+			// Reducing to 48→32→32→10 = 2880 params cuts the GA search space by 3×,
+			// dramatically improving how fast the population converges.
+			const int hiddenDepth = 2;
+			const int hiddenLayer = 32;
 
 			var outputLayer = effectors.Aggregate(0, (prod, next) => prod + next.InputCount());
 

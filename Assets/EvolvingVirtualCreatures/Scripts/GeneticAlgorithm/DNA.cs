@@ -42,11 +42,15 @@ namespace mattatz.GeneticAlgorithm {
 		
 		// Based on a mutation probability, picks a new random value
 		public void Mutate (float m, Vector2 range) {
-			// var c = (range.y - range.x) * 0.5f + range.x;
 			for (int i = 0, n = genes.Length; i < n; i++) {
 				if (Random.value < m) {
-					// genes[i] += Gaussian.Std(c, 0.25f);
-					genes[i] += Gaussian.Std(0f, 0.75f);
+					// Reduced sigma (0.3 vs old 0.75) makes mutations more focused —
+					// large jumps destroyed good solutions before they could be refined.
+					genes[i] += Gaussian.Std(0f, 0.3f);
+					// Clamp to [-3, 3] to prevent weight saturation in sigmoid neurons.
+					// Weights beyond this range push neuron outputs to hard 0 or 1,
+					// killing the gradient signal and halting learning.
+					genes[i] = Mathf.Clamp(genes[i], -3f, 3f);
 				}
 			}
 		}
